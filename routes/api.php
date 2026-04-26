@@ -1,5 +1,6 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Models\User;
@@ -21,3 +22,10 @@ Route::get('/test', function(){
 });
 
 Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
+use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+
+Route::post('/login', [UserController::class, 'login']);
+Route::get('/welcome2', [UserController::class, 'welcome2']);
+ 
