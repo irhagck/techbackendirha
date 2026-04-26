@@ -1,21 +1,23 @@
 <?php
 
-<<<<<<< HEAD
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/test', function(){
+    $user = User::create([
+            'name' => 'írha',
+            'email' => 'test@test.com',
+            'password' => Hash::make('test@test.com'),
+        ]);
+
+        return response()->json([
+            'message' => 'User created',
+            'data' => $user
+        ], 201);
+});
 
 Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
-=======
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-
-Route::post('/login', [UserController::class, 'login']);
-Route::get('/welcome2', [UserController::class, 'welcome2']);
-        // route name, Class name,             method name
-// Route::post();
-// Route::any();
->>>>>>> 62157d1e1151241d9c810343c31193832040f8f1
