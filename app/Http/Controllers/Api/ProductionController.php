@@ -30,7 +30,7 @@ class ProductionController extends Controller
     \Log::info('STORE HIT');
     $request->validate([
         'machine_id' => 'required|integer',
-        'user_id' => 'required|integer', // frontend se AuthService.userId aayega
+        'user_id' => 'required|integer', 
         'factory_id' => 'required|integer',
         'ready_production' => 'required|numeric',
         'waste_production' => 'required|numeric',
@@ -76,7 +76,7 @@ class ProductionController extends Controller
      
 
 
-    // find latest manager_id for this factory (if any)
+    // find latest manager_id for this factory 
     $managerId = Production::where('factory_id', $request->factory_id)
         ->whereNotNull('manager_id')
         ->latest()
@@ -104,10 +104,8 @@ class ProductionController extends Controller
         ], 400);
     }
 
-    // ✅ Alert threshold batch assign hote waqt set hui thi — is batch ki har row par carry hoti hai
+    //  Alert threshold batch assign hote waqt set hui then is batch ki har row par carry hoti hai
     $alertThreshold = $ownLatest->alert_threshold;
-
-    // Is batch ke liye pehle hi alert ja chuki? (kisi bhi row par alert_sent = true)
     $alertAlreadySent = Production::where('machine_id', $request->machine_id)
         ->where('batch_id', $batchId)
         ->where('alert_sent', true)
@@ -116,11 +114,6 @@ class ProductionController extends Controller
     $shouldSendAlert = $alertThreshold !== null
         && $newRemaining <= $alertThreshold
         && !$alertAlreadySent;
-
-    // ✅ Owner khud jo production Machines page se enter karta hai, usko approval
-    //    ki zarurat nahi — wo seedha "approved" (status 4) create hoti hai.
-    //    Employee (khud ya kisi aur ki taraf se, jab tak woh owner na ho) ki entry
-    //    hamesha pehle "Added" (status 1) me jati hai, phir manager/owner review karte hain.
     $actingUser = $request->user();
     $enteredByOwner = $actingUser && method_exists($actingUser, 'hasRole') && $actingUser->hasRole('owner');
     $initialStatus = $enteredByOwner ? 4 : 1;
@@ -152,9 +145,6 @@ class ProductionController extends Controller
 
         $machineName = Machine::where('id', $request->machine_id)->value('machine_name');
         $employeeName = $employee->user?->name ?? 'Employee';
-
-        // ✅ Owner(s) ko "pending approval" notification sirf tab bhejo jab isko
-        //    waqai review ki zarurat ho — owner ki khud ki entry ko nahi (wo already approved hai)
         if (!$enteredByOwner) {
             try {
                 $owners = User::role('owner')->get();
@@ -173,7 +163,7 @@ class ProductionController extends Controller
             }
         }
 
-        // ✅ Low-remaining alert — machine ki total length khatam hone wali hai
+        //  Low remaining alert machine 
         if ($shouldSendAlert) {
             try {
                 $owners = User::role('owner')->get();
@@ -188,7 +178,7 @@ class ProductionController extends Controller
                     ]);
                 }
             } catch (\Exception $e) {
-                \Log::error('Low-remaining alert notification failed: ' . $e->getMessage());
+                \Log::error('Low remaining alert notification failed: ' . $e->getMessage());
             }
         }
 
@@ -243,8 +233,8 @@ class ProductionController extends Controller
         ]);
     }
  
-    // GET /api/payments/view-payments/{factoryId}
- // GET /api/payments/view-payments/{factoryId}
+  
+ // view-payments
 public function viewPayments($factoryId)
 {
     $authUser = auth()->user();
@@ -262,14 +252,14 @@ public function viewPayments($factoryId)
         $managerName = $manager?->name;
     }
 
-    // ---------- ROLE BASED ACCESS CONTROL (Spatie) ----------
+    // ROLE BASED ACCESS CONTROL
     if ($authUser->hasRole('owner')) {
-        // Admin: full access, no restriction
+        // Admin full access no restriction
 
     } elseif ($authUser->hasRole('manager')) {
         if ((int) $factory->manager_id !== (int) $authUser->id) {
             return response()->json([
-                'message' => 'Unauthorized: Aap sirf apni factory ke payments dekh sakte hain.'
+                'message' => 'Unauthorized: You are not the manager of this factory.'
             ], 403);
         }
 
@@ -279,7 +269,7 @@ public function viewPayments($factoryId)
     } else {
         return response()->json(['message' => 'Unauthorized role.'], 403);
     }
-    // -----------------------------------------------------------
+ 
 
     $recordsQuery = Production::where('factory_id', $factoryId)
         ->whereNotNull('employee_id')
@@ -308,7 +298,7 @@ public function viewPayments($factoryId)
         ->pluck('total_paid', 'employee_id');
 
 
-    // Fetch all machine names in a single query (avoids N+1 queries)
+    // Fetch all machine names in a single query 
     $machineIds = $records->pluck('machine_id')->filter()->unique();
     $machines = Machine::whereIn('id', $machineIds)->pluck('machine_name', 'id');
 
@@ -327,7 +317,7 @@ public function viewPayments($factoryId)
         $employeeName = $user?->name;
     }
 
-    // ---------- machine-wise grouping ----------
+    // machine-wise grouping
     $machineGroups = $rows->groupBy('machine_id')->map(function ($machineRows, $machineId) use ($machines) {
 
         $productions = $machineRows->map(function ($row) {
@@ -422,7 +412,7 @@ public function viewPayments($factoryId)
         'data' => $grouped,
     ]);
 }
-    // 9. Assign production (FIXED)
+    //  Assign production (FIXED)
     public function assignProduction(Request $request)
     {
         $request->validate([
@@ -430,7 +420,7 @@ public function viewPayments($factoryId)
             'variety_type' => 'required|string',
             'total_length' => 'required|numeric',
             'amount_per_meter' => 'required|numeric',
-            // Optional — owner gets notified once a batch's remaining length drops to this
+            //  owner gets notified once a batch's remaining length drops to this
             'alert_threshold' => 'nullable|numeric|min:0',
         ]);
 
@@ -481,7 +471,7 @@ public function viewPayments($factoryId)
                 'shift_start' => $employee->shift_starttime,
                 'shift_end' => $employee->shift_endtime,
 
-                'status' => 1,
+                'status' => 0,
             ]);
 
             $created[] = $production;   // append to the array for count() later

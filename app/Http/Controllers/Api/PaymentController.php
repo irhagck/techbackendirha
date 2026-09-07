@@ -40,16 +40,13 @@ class PaymentController extends Controller
             'amount_paid'   => 'required|numeric|min:1',
             'employee_id'   => 'required|integer|exists:employees,id',
             // 'user_id'       => 'required|integer|exists:users,id',
-            'production_id' => 'nullable|integer|exists:productions,id', // ✅ NEW
+            'production_id' => 'nullable|integer|exists:productions,id', 
         ]);
 
         $employee = Employee::find($request->employee_id);
         if (!$employee) {
             return response()->json(['message' => 'Employee not found'], 404);
         }
-
-        // ✅ Optional but recommended: agar production_id diya gaya hai,
-        // check karo ke ye production isi employee ki hai
         if ($request->production_id) {
             $production = Production::where('id', $request->production_id)
                 ->where('employee_id', $request->employee_id)
@@ -66,7 +63,7 @@ class PaymentController extends Controller
             'amount_paid'   => $request->amount_paid,
             'employee_id'   => $request->employee_id,
             'user_id'       => Auth::user()->id,
-            'production_id' => $request->production_id, // ✅ NEW
+            'production_id' => $request->production_id, 
         ]);
 
         return response()->json([

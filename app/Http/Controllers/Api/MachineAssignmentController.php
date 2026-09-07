@@ -10,7 +10,7 @@ use App\Models\Employee;
 
 class MachineAssignmentController extends Controller
 {
-    // get employees that can be assigned machines (only employees with role 'employee')
+    // get employees that can be assigned machines 
     public function getAssignableEmployees()
     {
         $employeeUserIds = \App\Models\Employee::pluck('user_id')->unique();
@@ -71,7 +71,7 @@ class MachineAssignmentController extends Controller
                 'shift_start' => $employee->shift_starttime,
                 'shift_end'   => $employee->shift_endtime,
 
-                'status' => 1,
+                'status' => 0,
             ]);
         }
 
